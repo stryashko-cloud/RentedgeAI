@@ -1,10 +1,23 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Repo root must contain: requirements.txt, backend/, frontend/, runtime.txt
+#
+# After first deploy: open https://<service-name>.onrender.com/
+# Optional: set env DATABASE_PATH=/path/on/disk/listings.db if you attach a persistent disk.
+# region: frankfurt — EU (low latency from Czechia vs US regions).
+
 services:
   - type: web
     name: rentedge-ai
     runtime: python
     region: frankfurt
     plan: free
-    buildCommand: pip install -r requirements.txt
+    # Prefer requirements.txt at repo root; fallback pins match requirements.txt if the file was not pushed to GitHub.
+    buildCommand: |
+      if [ -f requirements.txt ]; then
+        pip install -r requirements.txt
+      else
+        pip install "fastapi==0.115.12" "uvicorn[standard]==0.34.2" "pydantic==2.11.4"
+      fi
     startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     autoDeployTrigger: commit
